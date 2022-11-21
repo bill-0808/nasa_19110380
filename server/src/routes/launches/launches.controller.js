@@ -1,7 +1,13 @@
-const { getAllLaunches, addNewLaunch, existsLaunchWithId, abortLaunchById } = require('../../models/launches.model')
-
+const { addNewLaunch, existsLaunchWithId, abortLaunchById } = require('../../models/launches.model')
+const launches = require('../../models/launches.mongo')
 function httpGetAllLaunches(req, res) {
-    return res.status(200).json(getAllLaunches());
+    launches.find({}, function (err, launches) {
+        if (!err) {
+            return res.status(200).send(launches);
+        } else {
+            return res.status(500).send(err);
+        }
+    })
 }
 
 function httpAddNewLaunch(req, res) {

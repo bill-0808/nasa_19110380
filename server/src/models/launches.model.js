@@ -1,4 +1,4 @@
-const launches = new Map();
+const launches = require('./launches.mongo');
 
 var lastestFlightNumber = 100;
 
@@ -13,31 +13,35 @@ const launch = {
     success: true,
 };
 
-launches.set(launch.flightNumber, launch);
-function getAllLaunches() {
-    return Array.from(launches.values());
+async function addNewLaunch(launch) {
+    await lastestFlightNumber++;
+    let newLaunch = new launches({
+        flightNumber: lastestFlightNumber,
+        mission: launch.mission,
+        rocket: launch.rocket,
+        launchDate: launch.Date,
+        target: launch.target,
+        customer: ['Zero to Mastery', 'NASA'],
+        upcoming: true,
+        success: true,
+    })
+    newLaunch.save(newLaunch).then(data => {
+        return data;
+    }).catch(err => { return err; })
 }
 
-function addNewLaunch(launch) {
-    lastestFlightNumber++;
-    launches.set(lastestFlightNumber,
-        Object.assign(launch, {
-            success: true,
-            upcoming: true,
-            customer: ['Zero to Mastery', 'NASA',],
-            flightNumber: lastestFlightNumber,
-        }));
+async function existsLaunchWithId(launchId) {
+    let launchExist = await launches.findOne({ flightNumber: launchId })
+    if (launchExist) {
+        return true;
+    } else {
+        return false
+    }
 }
 
-function existsLaunchWithId(launchId) {
-    return launches.has(launchId);
-}
-
-function abortLaunchById(launchId) {
-    const aborted = launches.get(launchId);
-    aborted.upcoming = false;
-    aborted.success = false;
+async function abortLaunchById(launchId) {
+    let aborted = await launches.findOneAndUpdate({ flightNumber: launchId }, { upcoming: false, success: false })
     return aborted;
 }
 
-module.exports = { getAllLaunches, addNewLaunch, existsLaunchWithId, abortLaunchById };
+module.exports = { addNewLaunch, existsLaunchWithId, abortLaunchById };
